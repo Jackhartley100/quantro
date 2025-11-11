@@ -23,6 +23,7 @@ type GetDashboardCaptionsParams = {
   transactions: Transaction[];
   rollingIncomeAverage?: number;
   benchmarkHourly?: number;
+  currencySymbol?: string;
 };
 
 export function getDashboardCaptions({
@@ -33,6 +34,7 @@ export function getDashboardCaptions({
   transactions,
   rollingIncomeAverage = 0,
   benchmarkHourly = 28,
+  currencySymbol = '£',
 }: GetDashboardCaptionsParams): Captions {
   // Net caption
   const savingsRate = income > 0 ? net / income : 0;
@@ -42,13 +44,13 @@ export function getDashboardCaptions({
     netCaption = "You're negative this month. A small cut to top costs would help.";
   } else if (savingsRate >= 0.6) {
     const pct = new Intl.NumberFormat('en-GB', { style: 'percent', maximumFractionDigits: 0 }).format(savingsRate);
-    netCaption = `Excellent. You're keeping ${pct} of every £1 earned.`;
+    netCaption = `Excellent. You're keeping ${pct} of every ${currencySymbol}1 earned.`;
   } else if (savingsRate >= 0.3) {
     const pct = new Intl.NumberFormat('en-GB', { style: 'percent', maximumFractionDigits: 0 }).format(savingsRate);
-    netCaption = `Solid. You're keeping ${pct} of every £1 earned.`;
+    netCaption = `Solid. You're keeping ${pct} of every ${currencySymbol}1 earned.`;
   } else if (savingsRate >= 0.1) {
     const pct = new Intl.NumberFormat('en-GB', { style: 'percent', maximumFractionDigits: 0 }).format(savingsRate);
-    netCaption = `Tight month. Keeping ${pct} per £1.`;
+    netCaption = `Tight month. Keeping ${pct} per ${currencySymbol}1.`;
   } else {
     netCaption = "Margins are thin. Consider trimming a top expense.";
   }
@@ -58,7 +60,7 @@ export function getDashboardCaptions({
   const expenseTransactions = transactions.filter(tx => tx.type === 'expense');
   
   if (expenseTransactions.length === 0 || expenses === 0) {
-    expensesCaption = "You've kept costs at £0 so far.";
+    expensesCaption = `You've kept costs at ${currencySymbol}0 so far.`;
   } else {
     // Find top expense category
     const categoryTotals: { [key: string]: number } = {};
@@ -78,7 +80,7 @@ export function getDashboardCaptions({
       );
       expensesCaption = `Biggest drain is ${topCategory.category} (${share}). Worth a review?`;
     } else {
-      expensesCaption = "You've kept costs at £0 so far.";
+      expensesCaption = `You've kept costs at ${currencySymbol}0 so far.`;
     }
   }
 
@@ -107,7 +109,7 @@ export function getDashboardCaptions({
   } else if (effectiveHourly >= benchmarkHourly) {
     hourlyCaption = "You're outperforming the average freelancer.";
   } else {
-    hourlyCaption = `Below the £${benchmarkHourly}/hr benchmark. Higher-value work or pricing may help.`;
+    hourlyCaption = `Below the ${currencySymbol}${benchmarkHourly}/hr benchmark. Higher-value work or pricing may help.`;
   }
 
   return {

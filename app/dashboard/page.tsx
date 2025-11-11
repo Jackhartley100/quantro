@@ -384,6 +384,7 @@ function DashboardPageContent() {
     transactions: transactionsToUse,
     rollingIncomeAverage,
     benchmarkHourly: 28,
+    currencySymbol: settings.currencySymbol,
   });
 
   // Calculate top expense category percentage change for the pill
