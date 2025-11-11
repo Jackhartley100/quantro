@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { getWriteClient } from '@/lib/supabase-server-write'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -28,8 +29,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Insert the transaction
-    const { data, error } = await supabase
+    // Insert the transaction using write client (service role key if available)
+    const writeClient = await getWriteClient()
+    const { data, error } = await writeClient
       .from('transactions')
       .insert({
         user_id: user.id,

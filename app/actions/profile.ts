@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase-server'
+import { getWriteClient } from '@/lib/supabase-server-write'
 import { revalidatePath } from 'next/cache'
 
 export type ProfileData = {
@@ -45,7 +46,8 @@ export async function getProfile(): Promise<ActionResult<ProfileData>> {
       const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const browserLocale = Intl.DateTimeFormat().resolvedOptions().locale.split('-')[0]
       
-      const { data: newProfile, error: insertError } = await supabase
+      const writeClient = await getWriteClient()
+      const { data: newProfile, error: insertError } = await writeClient
         .from('profiles')
         .insert({
           id: user.id,
@@ -142,7 +144,8 @@ export async function updateProfile(data: {
     if (data.timezone !== undefined) updateData.timezone = data.timezone
     if (data.locale !== undefined) updateData.locale = data.locale
 
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update(updateData)
       .eq('id', user.id)
@@ -253,7 +256,8 @@ export async function uploadAvatar(formData: FormData): Promise<ActionResult<{ a
     const avatarUrl = urlData.publicUrl
 
     // Update profile with avatar URL
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update({ avatar_url: avatarUrl })
       .eq('id', user.id)
@@ -297,7 +301,8 @@ export async function removeAvatar(): Promise<ActionResult> {
     }
 
     // Update profile to remove avatar URL
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update({ avatar_url: null })
       .eq('id', user.id)
@@ -360,7 +365,8 @@ export async function markTourAsSeen(): Promise<ActionResult> {
     }
 
     // Update both has_seen_tour and tour_dismissed_at atomically
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update({ 
         has_seen_tour: true,
@@ -391,7 +397,8 @@ export async function resetTour(): Promise<ActionResult> {
     }
 
     // Reset tour flags (for "Re-run tour" feature - only resets DB, not localStorage)
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update({ 
         has_seen_tour: false,
@@ -438,7 +445,8 @@ export async function updateProfileSettings(data: {
         : data.monthly_net_goal
     }
 
-    const { error: updateError } = await supabase
+    const writeClient = await getWriteClient()
+    const { error: updateError } = await writeClient
       .from('profiles')
       .update(updateData)
       .eq('id', user.id)
