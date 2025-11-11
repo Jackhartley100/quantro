@@ -54,24 +54,46 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // TODO: Implement proper cookie-based server-side protection for /dashboard routes
-  // For now, we allow rendering and rely on client-side redirect in page.tsx
-  // The dashboard page checks authentication client-side and redirects to /login if needed
+  // Refresh session if expired
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Client-side check fallback: allow rendering, page.tsx will handle redirect
-  // if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-  //   return NextResponse.redirect(new URL('/login', request.url))
-  // }
+  const { pathname } = request.nextUrl
+
+  // Protected routes - require authentication
+  const protectedRoutes = ['/dashboard', '/settings', '/profile']
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+  // Public auth routes - redirect to dashboard if already signed in
+  const publicAuthRoutes = ['/login', '/signup', '/register']
+  const isPublicAuthRoute = publicAuthRoutes.includes(pathname) || pathname === '/'
+
+  // Handle protected routes
+  if (isProtectedRoute && !user) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirectedFrom', pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Handle public auth routes - redirect to dashboard if signed in
+  if (isPublicAuthRoute && user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return response
 }
 
 export const config = {
-  // Only match dashboard routes - explicitly exclude auth routes
-  // This ensures /login, /signup, /reset, /onboarding, and / are not intercepted
-  matcher: '/dashboard/:path*',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
+  ],
 }
 
