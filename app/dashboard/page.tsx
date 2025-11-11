@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SummaryCard from "@/components/SummaryCard";
@@ -19,7 +19,7 @@ import { shouldShowTour, getLocalStorageTourState, setLocalStorageTourSeen, type
 
 type Tx = { id: string; amount: number; type: "income"|"expense"; category: string|null; hours_spent: number|null; created_at: string; transaction_date: string|null };
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [transactions, setTransactions] = useState<Tx[]>([]);
@@ -645,5 +645,19 @@ export default function DashboardPage() {
       )}
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-neutral-400">Loading...</div>
+        </div>
+      </div>
+    }>
+      <DashboardPageContent />
+    </Suspense>
   );
 }
